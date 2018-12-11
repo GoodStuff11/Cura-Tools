@@ -12,7 +12,8 @@ class Window(tk.Frame):
         self.windows = [self.window1, self.window2, self.window3, self.window4, self.window5, self.window6]
         self.config(padx=10, pady=10)
         self.grid(column=0, row=0)
-
+        self.s = ''
+        
         self.i = 0
 
         self.VARIABLES = []
@@ -21,7 +22,8 @@ class Window(tk.Frame):
         # window 1
         self.dir = tk.StringVar()
         self.VARIABLES.append(self.dir)
-
+        
+        
         def check_address_next():
             if os.path.isfile('./Cura_Directory'):
                 f = open('./Cura_Directory')
@@ -93,13 +95,12 @@ class Window(tk.Frame):
         self.update_window()
 
     def run(self):
-        s = self.dir.get().replace('\\', '/') + '/quality_changes'
         # removes .inst and .cfg and uses the _ as delimiter for different words
-        directory = os.listdir(s)
+        directory = os.listdir(self.s)
 
         for d in directory:
             try:
-                with open(s + '/' + d, 'r') as file:
+                with open(self.s + '/' + d, 'r') as file:
                     lines = file.readlines()
                 # match names
                 for profiles in self.profiles:
@@ -118,7 +119,7 @@ class Window(tk.Frame):
                                         lines.remove(l)
                                         break  # found the line you were looking for
                     # override the file and create a new one with ORIGINAL added
-                    with open(s + '/' + d, 'w') as file:
+                    with open(self.s + '/' + d, 'w') as file:
                         for L in lines:
                             file.write(L)
             except PermissionError:
@@ -155,15 +156,23 @@ class Window(tk.Frame):
         self.next_button1.grid(row=2, columnspan=3)
         self.lowerLabel1.grid(row=1, column=0, columnspan=3)
         self.upperLabel1.grid(row=0, column=0, columnspan=3)
-
+    
+    def profile_folder(self, address):
+        version = address.split('/')[-1]
+        if float('.'.join(version.split('.')[0:2])) >= 3.4:
+            return '/quality_changes'
+        else:
+            return '/quality'
+        
     def window2(self):
 
         def checkDir():
-            s = self.dir.get().replace('\\', '/') + '/quality_changes'
-            if os.path.exists(s):
+            self.s = self.dir.get().replace('\\', '/')
+            self.s += self.profile_folder(self.s)
+            if os.path.exists(self.s):
                 if not os.path.exists('./Cura_Directory'):
                     file = open('./Cura_Directory', 'w+')
-                    file.write(s[:-16])
+                    file.write(self.s[:-16])
                     file.close()
                 self.next_window()
             else:
@@ -194,15 +203,12 @@ class Window(tk.Frame):
 
     def window3(self):
         # PROFILES
-        file = open('./Cura_Directory', 'r')
-        s = file.readline() + '/quality_changes'
-        file.close()
 
         # get profile names
         if not hasattr(self, 'profiles_check'):
-            directory = os.listdir(s)
+            directory = os.listdir(self.s)
             for d in directory:
-                with open(s + '/' + d, 'r') as file:
+                with open(self.s + '/' + d, 'r') as file:
                     lines = file.readlines()
                 if lines[2][7:-1] not in self.profiles:
                     self.profiles.append(lines[2][7:-1])
