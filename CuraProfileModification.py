@@ -4,26 +4,33 @@ import os
 
 
 class Window(tk.Frame):
+    s = ''
+    i = 0
+    profiles_check = []
+    VARIABLES = []
 
     def __init__(self, master):
         # making use of the tk.Frame object
         tk.Frame.__init__(self, master)
 
+        self.dir = tk.StringVar()
+        self.VARIABLES.append(self.dir)
+
         self.windows = [self.window1, self.window2, self.window3, self.window4, self.window5, self.window6]
         self.config(padx=10, pady=10)
         self.grid(column=0, row=0)
-        self.s = ''
-        
-        self.i = 0
 
-        self.VARIABLES = []
+        # automatically get directory of cura
+        if os.path.exists('./Cura_Directory'):
+            file = open('./Cura_Directory', 'r')
+            self.s = file.readline()
+            self.s += self.profile_folder(self.s)
+            file.close()
+
         # define all widgets
 
         # window 1
-        self.dir = tk.StringVar()
-        self.VARIABLES.append(self.dir)
-        
-        
+
         def check_address_next():
             if os.path.isfile('./Cura_Directory'):
                 f = open('./Cura_Directory')
@@ -41,7 +48,8 @@ class Window(tk.Frame):
             self.last_window()
 
         self.upperLabel1 = ttk.Label(self,
-                                     text='This program will ask for information so that it\n can automatically manipulate the Cura files.')
+                                     text='This program will ask for information so that it\n'
+                                          ' can automatically manipulate the Cura files.')
         self.lowerLabel1 = ttk.Label(self, text='Please open Cura')
         self.next_button1 = ttk.Button(self, text='Next', command=check_address_next)
 
@@ -80,7 +88,8 @@ class Window(tk.Frame):
         # window5
         self.upperLabel5 = ttk.Label(self, text='Is all of this correct?')
         self.lowerLabel5 = ttk.Label(self,
-                                     text='Note that the changes will be displayed in the console\nyou may revert back using Cura as needed.')
+                                     text='Note that the changes will be displayed in the console\n'
+                                          'you may revert back using Cura as needed.')
         self.dirLabel5 = ttk.Label(self)
         self.profileLabel5 = ttk.Label(self)
         self.settingsLabel5 = ttk.Label(self)
@@ -156,8 +165,9 @@ class Window(tk.Frame):
         self.next_button1.grid(row=2, columnspan=3)
         self.lowerLabel1.grid(row=1, column=0, columnspan=3)
         self.upperLabel1.grid(row=0, column=0, columnspan=3)
-    
-    def profile_folder(self, address):
+
+    @staticmethod
+    def profile_folder(address):
         version = address.split('/')[-1]
         if float('.'.join(version.split('.')[0:2])) >= 3.4:
             return '/quality_changes'
@@ -166,7 +176,7 @@ class Window(tk.Frame):
         
     def window2(self):
 
-        def checkDir():
+        def check_dir():
             self.s = self.dir.get().replace('\\', '/')
             self.s += self.profile_folder(self.s)
             if os.path.exists(self.s):
@@ -183,13 +193,13 @@ class Window(tk.Frame):
             if not self.dir.get():
                 self.next_button2.config(state=tk.DISABLED, command=self.ignore)
             else:
-                self.next_button2.config(state=tk.NORMAL, command=checkDir)
+                self.next_button2.config(state=tk.NORMAL, command=check_dir)
 
         # first time
         if not self.dir.get():
             self.next_button2.config(state=tk.DISABLED, command=self.ignore)
         else:
-            self.next_button2.config(state=tk.NORMAL, command=checkDir)
+            self.next_button2.config(state=tk.NORMAL, command=check_dir)
 
         # put each widget in place, reorient if was forgotten
         self.upperLabel2.grid(row=0, column=0, columnspan=3)
@@ -205,7 +215,8 @@ class Window(tk.Frame):
         # PROFILES
 
         # get profile names
-        if not hasattr(self, 'profiles_check'):
+        if len(self.profiles_check) == 0:
+            print(self.s)
             directory = os.listdir(self.s)
             for d in directory:
                 with open(self.s + '/' + d, 'r') as file:
