@@ -57,7 +57,7 @@ class Window(tk.Frame):
 
         try:
             directory_information = []
-            directory = os.listdir('./' + self.cura_dir.get() + '/profiles')
+            directory = os.listdir('./' + self.folder_name.get() + '/profiles')
             for file_name in directory:
                 n = 0
                 if os.path.exists(self.s + self.profile_folder(self.s) + '/' + file_name):
@@ -66,7 +66,7 @@ class Window(tk.Frame):
                         n += 1
                     new_file_name = file_name[:-9] + '_' + str(n) + '.inst.cfg'
 
-                with open('./' + self.cura_dir.get() + '/profiles/' + d, 'r') as f:
+                with open('./' + self.folder_name.get() + '/profiles/' + d, 'r') as f:
                     lines = f.readlines()
                     name = lines[2][7:-1]
 
@@ -86,9 +86,9 @@ class Window(tk.Frame):
                 directory_information.append([file_name, new_file_name, dup_count])
             # add to the file once all information has been received
             for d in directory_information:
-                with open('./' + self.cura_dir.get() + '/profiles/' + d[0], 'r') as file:
+                with open('./' + self.folder_name.get() + '/profiles/' + d[0], 'r') as file:
                     lines = file.readlines()
-                shutil.copy('./' + self.cura_dir.get() + '/profiles/' + d[0],
+                shutil.copy('./' + self.folder_name.get() + '/profiles/' + d[0],
                             self.s + self.profile_folder(self.s) + '/' + d[1])
                 lines[2] = lines[2][:-1] + ' #' + str(d[2]) + '\n'
                 with open(self.s + self.profile_folder(self.s) + '/' + d[1], 'w') as file:
@@ -98,16 +98,16 @@ class Window(tk.Frame):
             pass
 
         try:
-            directory = os.listdir('./' + self.cura_dir.get() + '/materials')
+            directory = os.listdir('./' + self.folder_name.get() + '/materials')
             for file_name in directory:
                 dup_count = 0
                 if os.path.exists(self.s + '/materials/' + file_name):
                     while os.path.exists(self.s + '/materials/' + file_name[:-17] + str(dup_count) + '.xml.fdm_material'):
                         dup_count += 1
-                    os.rename('./' + self.cura_dir.get() + '/materials/' + file_name, './' + self.dir.get() + '/materials/' +
+                    os.rename('./' + self.folder_name.get() + '/materials/' + file_name, './' + self.folder_name.get() + '/materials/' +
                               file_name[:-17] + str(dup_count) + '.xml.fdm_material')
                     file_name = file_name[:-17] + str(dup_count) + '.xml.fdm_material'
-                shutil.copy('./' + self.cura_dir.get() + '/materials/' + file_name, self.s + '/materials')
+                shutil.copy('./' + self.folder_name.get() + '/materials/' + file_name, self.s + '/materials')
         except:
             pass
         self.master.destroy()
@@ -190,18 +190,18 @@ class Window(tk.Frame):
         self.entry2.config(width=50)
 
         def check_dir():
-            if os.path.exists('./' + self.cura_dir.get()):
+            if os.path.exists('./' + self.folder_name.get()):
                 self.run()
             else:
                 self.lowerLabel2.config(text='Cannot find this directory.', foreground='red')
 
         def callback(*arg):
-            if not self.cura_dir.get():
+            if not self.folder_name.get():
                 self.next_button2.config(state=tk.DISABLED, command=self.ignore)
             else:
                 self.next_button2.config(state=tk.NORMAL, command=check_dir)
 
-        self.cura_dir.trace('w', callback)
+        self.folder_name.trace('w', callback)
 
 
 def main():
