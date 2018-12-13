@@ -9,11 +9,13 @@ class Window(tk.Frame):
     i = 0
     VARIABLES = []
     skipped = False
+    profiles_check = []
+    materials_check = []
 
     def __init__(self, master):
         tk.Frame.__init__(self, master)
         self.windows = [self.window1, self.window2, self.window3, self.window4, self.window5]
-        self.windows_skip = [1 for i in self.windows]
+        self.windows_skip = [1] * len(self.windows)
 
         self.dir = tk.StringVar()
         self.VARIABLES.append(self.dir)
@@ -170,7 +172,7 @@ class Window(tk.Frame):
             return '/quality'
 
     def window1(self):
-        def checkDir():
+        def check_dir():
             self.s = self.dir.get().replace('\\', '/')
             s = self.s + self.profile_folder(self.s)
             if os.path.exists(s):
@@ -187,7 +189,7 @@ class Window(tk.Frame):
             if not self.dir.get():
                 self.next_button1.config(state=tk.DISABLED, command=self.ignore)
             else:
-                self.next_button1.config(state=tk.NORMAL, command=checkDir)
+                self.next_button1.config(state=tk.NORMAL, command=check_dir)
 
         self.dir.trace('w', callback)
 
@@ -195,7 +197,7 @@ class Window(tk.Frame):
         if not self.dir.get():
             self.next_button1.config(state=tk.DISABLED, command=self.ignore)
         else:
-            self.next_button1.config(state=tk.NORMAL, command=checkDir)
+            self.next_button1.config(state=tk.NORMAL, command=check_dir)
 
         # put each widget in place, reorient if was forgotten
         self.upperLabel1.grid(row=0, column=0, columnspan=3)
@@ -229,7 +231,7 @@ class Window(tk.Frame):
         s = self.s + self.profile_folder(self.s)
 
         # get profile names
-        if not hasattr(self, 'profiles_check'):
+        if len(self.profiles_check) == 0:
             directory = os.listdir(s)
             for d in directory:
                 with open(s + '/' + d, 'r') as file:
@@ -270,13 +272,16 @@ class Window(tk.Frame):
         s = self.s + '/materials'
 
         # get profile names
-        if not hasattr(self, 'materials_check'):
+        if len(self.materials_check) == 0:
             directory = os.listdir(s)
             for d in directory:
                 with open(s + '/' + d, 'r') as file:
                     lines = file.readlines()
                 if lines[7][13:-9] not in self.materials:
-                    self.materials.append(lines[7][13:-9])
+                    if lines[7][13:-9] == '':
+                        self.materials.append(lines[4][13:-9] + ' ' + lines[6][13:-9] + ' ' + lines[5][16:-12])
+                    else:
+                        self.materials.append(lines[7][13:-9])
             self.materials_check = [tk.IntVar() for i in self.materials]
             self.VARIABLES += self.materials_check
 
@@ -306,7 +311,7 @@ class Window(tk.Frame):
             i.trace('w', callback)
 
     def window5(self):
-        def checkDir():
+        def check_dir():
             s = self.dir2.get().replace('\\', '/')
             if os.path.exists(s):
                 self.run()
@@ -323,7 +328,7 @@ class Window(tk.Frame):
         self.lowerLabel5.config(text='')
         self.next_button5.grid(row=3, column=0, sticky=tk.E)
         self.back_button5.grid(row=3, column=0, sticky=tk.W)
-        self.next_button5.config(command=checkDir)
+        self.next_button5.config(command=check_dir)
 
 
 def main():
