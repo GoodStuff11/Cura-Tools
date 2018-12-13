@@ -5,25 +5,31 @@ import shutil
 
 
 class Window(tk.Frame):
+    s = ''
+    i = 0
+    VARIABLES = []
+    skipped = False
+
     def __init__(self, master):
         tk.Frame.__init__(self, master)
-        self.i = 0
         self.windows = [self.window1, self.window2]
+        self.dir = tk.StringVar()
+        self.VARIABLES.append(self.dir)
 
         self.config(padx=10, pady=10)
         self.grid(column=0, row=0)
-        self.skipped = False
-
-        self.VARIABLES = []
-
-        self.dir = tk.StringVar()
-        self.VARIABLES.append(self.dir)
 
         if os.path.isfile('./Cura_Directory'):
             f = open('./Cura_Directory')
             self.dir.set(f.readline())
             f.close()
             self.i += 1
+
+        # get directory of Cura
+        if os.path.exists('./Cura_Directory'):
+            file = open('./Cura_Directory', 'r')
+            self.s = file.readline()
+            file.close()
 
         # Window 1
         self.next_button1 = ttk.Button(self, text='Next', command=self.ignore, state=tk.DISABLED)
@@ -34,31 +40,28 @@ class Window(tk.Frame):
         self.entry1.config(width=35)
 
         # Window 2
-        self.upperLabel2 = ttk.Label(self, text='Please put the previously exported folder into the folder with the executable.\nPlease input the name of the folder you would like to import.')
+        self.upperLabel2 = ttk.Label(self,
+                                     text='Please put the previously exported folder into the folder with the executable.\n'
+                                          'Please input the name of the folder you would like to import.')
         if self.i == 0:
             self.skipped = True
         self.dir = tk.StringVar()
-        self.entry2 = ttk.Entry(self,textvariable=self.dir)
-        self.next_button2 = ttk.Button(self,text='Import', state=tk.DISABLED, command=self.ignore)
-        self.back_button2 = ttk.Button(self,text='Back')
+        self.entry2 = ttk.Entry(self, textvariable=self.dir)
+        self.next_button2 = ttk.Button(self, text='Import', state=tk.DISABLED, command=self.ignore)
+        self.back_button2 = ttk.Button(self, text='Back')
         self.lowerLabel2 = ttk.Label(self, text='')
 
         self.update_window()
 
     def run(self):
-        file = open('./Cura_Directory', 'r')
-        s = file.readline()
-        file.close()
-
 
         try:
             directory_information = []
             directory = os.listdir('./' + self.dir.get() + '/profiles')
             for d in directory:
                 n = 0
-                if os.path.exists(s + '/quality_changes/' + d):
-                    new_d = d
-                    while os.path.exists(s + '/quality_changes/' + d[:-9] + '_' + str(n) + '.inst.cfg'):
+                if os.path.exists(self.s + self.profile_folder(self.s) + '/' + d):
+                    while os.path.exists(self.s + self.profile_folder(self.s) + '/' + d[:-9] + '_' + str(n) + '.inst.cfg'):
                         n += 1
                     new_d = d[:-9] + '_' + str(n) + '.inst.cfg'
 
@@ -71,8 +74,8 @@ class Window(tk.Frame):
                 duplicates = True
                 while duplicates:
                     duplicates = False
-                    for di in os.listdir(s + '/quality_changes'):
-                        f = open(s + '/quality_changes/' + di,'r')
+                    for di in os.listdir(self.s + self.profile_folder(self.s) + '/'):
+                        f = open(self.s + self.profile_folder(self.s) + '/' + di, 'r')
                         L = f.readlines()
                         if L[2][7:-1] == name and N == 1 or L[2][7:-1] == name + ' #' + str(N) and N != 1:
                             N += 1
@@ -84,9 +87,10 @@ class Window(tk.Frame):
             for d in directory_information:
                 with open('./' + self.dir.get() + '/profiles/' + d[0], 'r') as file:
                     lines = file.readlines()
-                shutil.copy('./' + self.dir.get() + '/profiles/' + d[0], s + '/quality_changes/' + d[1])
+                shutil.copy('./' + self.dir.get() + '/profiles/' + d[0],
+                            self.s + self.profile_folder(self.s) + '/' + d[1])
                 lines[2] = lines[2][:-1] + ' #' + str(d[2]) + '\n'
-                with open(s + '/quality_changes/' + d[1], 'w') as file:
+                with open(self.s + self.profile_folder(self.s) + '/' + d[1], 'w') as file:
                     for L in lines:
                         file.write(L)
         except:
@@ -96,12 +100,13 @@ class Window(tk.Frame):
             directory = os.listdir('./' + self.dir.get() + '/materials')
             for d in directory:
                 n = 0
-                if os.path.exists(s + '/materials/' + d):
-                    while os.path.exists(s + '/materials/' + d[:-17] + str(n) + '.xml.fdm_material'):
+                if os.path.exists(self.s + '/materials/' + d):
+                    while os.path.exists(self.s + '/materials/' + d[:-17] + str(n) + '.xml.fdm_material'):
                         n += 1
-                    os.rename('./' + self.dir.get() + '/materials/' + d, './' + self.dir.get() + '/materials/' + d[:-17] + str(n) + '.xml.fdm_material')
+                    os.rename('./' + self.dir.get() + '/materials/' + d, './' + self.dir.get() + '/materials/' +
+                              d[:-17] + str(n) + '.xml.fdm_material')
                     d = d[:-17] + str(n) + '.xml.fdm_material'
-                shutil.copy('./' + self.dir.get() + '/materials/' + d, s + '/materials')
+                shutil.copy('./' + self.dir.get() + '/materials/' + d, self.s + '/materials')
         except:
             pass
         self.master.destroy()
@@ -135,9 +140,18 @@ class Window(tk.Frame):
         self.clear(self)
         self.windows[self.i]()
 
+    @staticmethod
+    def profile_folder(address):
+        version = address.split('/')[-1]
+        if float('.'.join(version.split('.')[0:2])) >= 3.4:
+            return '/quality_changes'
+        else:
+            return '/quality'
+
     def window1(self):
         def checkDir():
-            s = self.dir.get().replace('\\', '/') + '/quality_changes'
+            self.s = self.dir.get().replace('\\', '/')
+            s = self.s + self.profile_folder(self.s)
             if os.path.exists(s):
                 if not os.path.exists('./Cura_Directory'):
                     file = open('./Cura_Directory', 'w+')
@@ -190,7 +204,7 @@ class Window(tk.Frame):
             else:
                 self.next_button2.config(state=tk.NORMAL, command=check_dir)
 
-        self.dir.trace('w',callback)
+        self.dir.trace('w', callback)
 
 
 def main():
