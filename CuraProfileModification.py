@@ -4,7 +4,6 @@ import os
 
 
 class Window(tk.Frame):
-    s = ''
     i = 0
     profiles_check = []
     VARIABLES = []
@@ -13,45 +12,32 @@ class Window(tk.Frame):
         # making use of the tk.Frame object
         tk.Frame.__init__(self, master)
 
-        self.dir = tk.StringVar()
-        self.VARIABLES.append(self.dir)
+        self.cura_dir = tk.StringVar()
+        self.VARIABLES.append(self.cura_dir)
 
         self.windows = [self.window1, self.window2, self.window3, self.window4, self.window5, self.window6]
+        self.windows_skip = [1] * len(self.windows)
         self.config(padx=10, pady=10)
         self.grid(column=0, row=0)
 
         # automatically get directory of cura
+
         if os.path.exists('./Cura_Directory'):
-            file = open('./Cura_Directory', 'r')
-            self.s = file.readline()
-            self.s += self.profile_folder(self.s)
-            file.close()
+            f = open('./Cura_Directory')
+            self.cura_dir.set(f.readline())
+            self.windows_skip[1] = 0
+            self.cura_profile_dir = self.cura_dir.get() + self.profile_folder(self.cura_dir.get())
+            f.close()
 
         # define all widgets
 
         # window 1
 
-        def check_address_next():
-            if os.path.isfile('./Cura_Directory'):
-                f = open('./Cura_Directory')
-                self.dir.set(f.readline())
-                f.close()
-                self.i += 1
-            self.next_window()
-
-        def check_address_last():
-            if os.path.isfile('./Cura_Directory'):
-                f = open('./Cura_Directory')
-                self.dir.set(f.readline())
-                f.close()
-                self.i -= 1
-            self.last_window()
-
         self.upperLabel1 = ttk.Label(self,
                                      text='This program will ask for information so that it\n'
                                           ' can automatically manipulate the Cura files.')
         self.lowerLabel1 = ttk.Label(self, text='Please open Cura')
-        self.next_button1 = ttk.Button(self, text='Next', command=check_address_next)
+        self.next_button1 = ttk.Button(self, text='Next', command=self.next_window)
 
         # Window 2
 
@@ -59,7 +45,7 @@ class Window(tk.Frame):
         self.lowerLabel2 = ttk.Label(self, text='')
         self.upperLabel2 = ttk.Label(self,
                                      text='Cura > help > show configuration folder\nCopy and paste directory')
-        self.entry2 = ttk.Entry(self, textvariable=self.dir)
+        self.entry2 = ttk.Entry(self, textvariable=self.cura_dir)
         self.entry2.config(width=35)
         self.back_button2 = ttk.Button(self, text='Back', command=self.last_window)
 
@@ -68,8 +54,8 @@ class Window(tk.Frame):
         self.VARIABLES += self.profiles
         self.upperLabel3 = ttk.Label(self,
                                      text='Check the profiles which you want to be modified')
-        self.back_button3 = ttk.Button(self, text='Back', command=check_address_last)
-        self.next_button3 = ttk.Button(self, text='Next', command=self.next_window)
+        self.back_button3 = ttk.Button(self, text='Back', command=self.last_window)
+        self.next_button3 = ttk.Button(self, text='Next', command=self.ignore, state=tk.DISABLED)
         self.check_box3 = []
         # window 4
 
@@ -105,11 +91,11 @@ class Window(tk.Frame):
 
     def run(self):
         # removes .inst and .cfg and uses the _ as delimiter for different words
-        directory = os.listdir(self.s)
+        directory = os.listdir(self.cura_profile_dir)
 
         for d in directory:
             try:
-                with open(self.s + '/' + d, 'r') as file:
+                with open(self.cura_profile_dir + '/' + d, 'r') as file:
                     lines = file.readlines()
                 # match names
                 for profiles in self.profiles:
@@ -128,7 +114,7 @@ class Window(tk.Frame):
                                         lines.remove(l)
                                         break  # found the line you were looking for
                     # override the file and create a new one with ORIGINAL added
-                    with open(self.s + '/' + d, 'w') as file:
+                    with open(self.cura_profile_dir + '/' + d, 'w') as file:
                         for L in lines:
                             file.write(L)
             except PermissionError:
@@ -148,10 +134,14 @@ class Window(tk.Frame):
 
     def next_window(self):
         self.i += 1
+        while self.windows_skip[self.i] == 0:
+            self.i += 1
         self.update_window()
 
     def last_window(self):
         self.i -= 1
+        while self.windows_skip[self.i] == 0:
+            self.i -= 1
         self.update_window()
 
     def ignore(self):
@@ -168,8 +158,8 @@ class Window(tk.Frame):
 
     @staticmethod
     def profile_folder(address):
-        version = address.split('/')[-1]
-        if float('.'.join(version.split('.')[0:2])) >= 3.4:
+        address = address.replace('\\', '/')
+        if os.path.exists(address + '/quality_changes'):
             return '/quality_changes'
         else:
             return '/quality'
@@ -177,26 +167,26 @@ class Window(tk.Frame):
     def window2(self):
 
         def check_dir():
-            self.s = self.dir.get().replace('\\', '/')
-            self.s += self.profile_folder(self.s)
-            if os.path.exists(self.s):
+            self.cura_profile_dir = self.cura_dir.get() + self.profile_folder(self.cura_dir.get())
+            if os.path.exists(self.cura_profile_dir):
+                # create Cura_directory file if it doesn't exist
                 if not os.path.exists('./Cura_Directory'):
                     file = open('./Cura_Directory', 'w+')
-                    file.write(self.s[:-16])
+                    file.write(self.cura_dir.get())
                     file.close()
                 self.next_window()
             else:
-                self.lowerLabel2.config(text='Cannot find the right folder in this directory.', foreground='red')
+                self.lowerLabel1.config(text='Cannot find the right folder in this directory.', foreground='red')
 
         # update
         def callback(*args):
-            if not self.dir.get():
+            if not self.cura_dir.get():
                 self.next_button2.config(state=tk.DISABLED, command=self.ignore)
             else:
                 self.next_button2.config(state=tk.NORMAL, command=check_dir)
 
         # first time
-        if not self.dir.get():
+        if not self.cura_dir.get():
             self.next_button2.config(state=tk.DISABLED, command=self.ignore)
         else:
             self.next_button2.config(state=tk.NORMAL, command=check_dir)
@@ -209,17 +199,17 @@ class Window(tk.Frame):
         self.back_button2.grid(row=3, sticky=tk.W)
         self.next_button2.grid(row=3, column=1, columnspan=2)
 
-        self.dir.trace('w', callback)
+        self.cura_dir.trace('w', callback)
 
     def window3(self):
         # PROFILES
 
         # get profile names
         if len(self.profiles_check) == 0:
-            print(self.s)
-            directory = os.listdir(self.s)
+            print(self.cura_profile_dir)
+            directory = os.listdir(self.cura_profile_dir)
             for d in directory:
-                with open(self.s + '/' + d, 'r') as file:
+                with open(self.cura_profile_dir + '/' + d, 'r') as file:
                     lines = file.readlines()
                 if lines[2][7:-1] not in self.profiles:
                     self.profiles.append(lines[2][7:-1])
@@ -255,13 +245,13 @@ class Window(tk.Frame):
         self.upperLabel4.grid(row=0, column=0, columnspan=3)
 
         def callback(*arg):
-            if all(i.get() == 0 for i in self.settings):
+            if all(setting.get() == 0 for setting in self.settings):
                 self.next_button4.config(state=tk.DISABLED, command=self.ignore)
             else:
                 self.next_button4.config(state=tk.NORMAL, command=self.next_window)
 
-        for i in self.settings:
-            i.trace('w', callback)
+        for setting in self.settings:
+            setting.trace('w', callback)
 
     def window5(self):
         self.upperLabel5.grid(row=0, column=0, columnspan=2)
@@ -269,7 +259,7 @@ class Window(tk.Frame):
         self.lowerLabel5.config(foreground='gray')
 
         self.dirLabel5.grid(row=3, column=0, columnspan=10, sticky=tk.W)
-        self.dirLabel5.configure(text='Directory of Cura files: ' + self.dir.get())
+        self.dirLabel5.configure(text='Directory of Cura files: ' + self.cura_dir.get())
 
         self.profileLabel5.grid(row=4, columnspan=10, sticky=tk.W)
         self.profileLabel5.configure(text='Profiles: ' + ', '.join([self.profiles[i] for i in range(len(self.profiles)) if self.profiles_check[i].get() == 1]))
