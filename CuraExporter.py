@@ -5,7 +5,6 @@ import shutil
 
 
 class Window(tk.Frame):
-    s = ''
     i = 0
     VARIABLES = []
     skipped = False
@@ -17,30 +16,24 @@ class Window(tk.Frame):
         self.windows = [self.window1, self.window2, self.window3, self.window4, self.window5]
         self.windows_skip = [1] * len(self.windows)
 
-        self.dir = tk.StringVar()
-        self.VARIABLES.append(self.dir)
+        self.cura_dir = tk.StringVar()
+        self.VARIABLES.append(self.cura_dir)
 
         self.config(padx=10, pady=10)
         self.grid(column=0, row=0)
 
         if os.path.isfile('./Cura_Directory'):
             f = open('./Cura_Directory')
-            self.dir.set(f.readline())
+            self.cura_dir.set(f.readline())
             f.close()
             self.i += 1
-
-        # get directory of Cura
-        if os.path.exists('./Cura_Directory'):
-            file = open('./Cura_Directory', 'r')
-            self.s = file.readline()
-            file.close()
 
         # Window 1
         self.next_button1 = ttk.Button(self, text='Next', command=self.ignore, state=tk.DISABLED)
         self.lowerLabel1 = ttk.Label(self, text='')
         self.upperLabel1 = ttk.Label(self,
                                      text='Cura > help > show configuration folder\nCopy and paste directory')
-        self.entry1 = ttk.Entry(self, textvariable=self.dir)
+        self.entry1 = ttk.Entry(self, textvariable=self.cura_dir)
         self.entry1.config(width=35)
 
         # window 2
@@ -81,19 +74,19 @@ class Window(tk.Frame):
         self.lowerLabel5 = ttk.Label(self, text='')
         self.upperLabel5 = ttk.Label(self, text='Please input the directory where you want to export,\n'
                                                 'typing in nothing will export to the file of the executable')
-        self.dir2 = tk.StringVar()
-        self.VARIABLES.append(self.dir2)
-        self.entry5 = ttk.Entry(self, textvariable=self.dir2)
+        self.folder_name = tk.StringVar()
+        self.VARIABLES.append(self.folder_name)
+        self.entry5 = ttk.Entry(self, textvariable=self.folder_name)
         self.next_button5 = ttk.Button(self, text='Export')
         self.back_button5 = ttk.Button(self, text='Back', command=self.last_window)
 
         self.update_window()
 
     def run(self):
-
+        self.cura_dir = self.cura_dir.get()
         # create folder to export to
         n = 0
-        name = self.dir2.get() + '/' + 'EXPORTED CuraFiles #'
+        name = self.folder_name.get() + '/' + 'EXPORTED CuraFiles #'
         while os.path.exists(name + str(n)):
             n += 1
         address = name + str(n)
@@ -103,31 +96,38 @@ class Window(tk.Frame):
         if self.settings[0].get() == 1:
             os.makedirs(address + '/materials')
 
-        directory = os.listdir(self.s + self.profile_folder(self.s))
+        # profiles
+        directory = os.listdir(self.cura_dir + self.profile_folder(self.cura_dir))
         for d in directory:
-            with open(self.s + self.profile_folder(self.s) + '/' + d, 'r') as file:
+            with open(self.cura_dir + self.profile_folder(self.cura_dir) + '/' + d, 'r') as file:
                 lines = file.readlines()
-            if lines[2][7:-1] in [self.profiles[i] for i in range(len(self.profiles)) if
-                                  self.profiles_check[i].get() == 1]:
+            if lines[2][7:-1] in [self.profiles[i] for i in range(len(self.profiles)) if self.profiles_check[i].get() == 1]:
 
                 # make copy of profile
-                shutil.copy(self.s + self.profile_folder(self.s) + '/' + d, address + '/profiles')
+                shutil.copy(self.cura_dir + self.profile_folder(self.cura_dir) + '/' + d, address + '/profiles')
 
                 # rename copied profile
-                lines[2] = 'name = ' + self.new_profiles[self.profiles.index(lines[2][7:-1])].get() + '\n'
+                if self.new_profiles[self.profiles.index(lines[2][7:-1])].get() != '':
+                    lines[2] = 'name = ' + self.new_profiles[self.profiles.index(lines[2][7:-1])].get() + '\n'
                 with open(address + '/profiles/' + d, 'w') as file:
                     for L in lines:
                         file.write(L)
 
-        directory = os.listdir(self.s + '/materials')
+        # materials
+        directory = os.listdir(self.cura_dir + '/materials')
         for d in directory:
-            with open(self.s + '/materials/' + d, 'r') as file:
+            with open(self.cura_dir + '/materials/' + d, 'r') as file:
                 lines = file.readlines()
-            if lines[7][13:-9] in [self.materials[i] for i in range(len(self.materials)) if
-                                   self.materials_check[i].get() == 1]:
-                shutil.copy(self.s + '/materials/' + d, address + '/materials')
-                lines[7] = '      <label>' + self.new_materials[
-                    self.materials.index(lines[7][13:-9])].get() + '</label>\n'
+
+            name_line = lines[7][13:-9]
+            if name_line == '':
+                name_line = lines[4][13:-9] + ' ' + lines[6][13:-9] + ' ' + lines[5][16:-12]
+
+            if name_line in [self.materials[i] for i in range(len(self.materials)) if self.materials_check[i].get() == 1]:
+                shutil.copy(self.cura_dir + '/materials/' + d, address + '/materials')
+                # check if the new name is blank
+                if self.new_materials[self.materials.index(name_line)].get() != '':
+                    lines[7] = '      <label>' + self.new_materials[self.materials.index(name_line)].get() + '</label>\n'
                 with open(address + '/materials/' + d, 'w') as file:
                     for L in lines:
                         file.write(L)
@@ -173,8 +173,7 @@ class Window(tk.Frame):
 
     def window1(self):
         def check_dir():
-            self.s = self.dir.get().replace('\\', '/')
-            s = self.s + self.profile_folder(self.s)
+            s = self.cura_dir.get() + self.profile_folder(self.cura_dir.get())
             if os.path.exists(s):
                 if not os.path.exists('./Cura_Directory'):
                     file = open('./Cura_Directory', 'w+')
@@ -186,15 +185,15 @@ class Window(tk.Frame):
 
         # update
         def callback(*args):
-            if not self.dir.get():
+            if not self.cura_dir.get():
                 self.next_button1.config(state=tk.DISABLED, command=self.ignore)
             else:
                 self.next_button1.config(state=tk.NORMAL, command=check_dir)
 
-        self.dir.trace('w', callback)
+        self.cura_dir.trace('w', callback)
 
         # first time
-        if not self.dir.get():
+        if not self.cura_dir.get():
             self.next_button1.config(state=tk.DISABLED, command=self.ignore)
         else:
             self.next_button1.config(state=tk.NORMAL, command=check_dir)
@@ -228,7 +227,7 @@ class Window(tk.Frame):
 
     def window3(self):
         # PROFILES
-        s = self.s + self.profile_folder(self.s)
+        s = self.cura_dir.get() + self.profile_folder(self.cura_dir.get())
 
         # get profile names
         if len(self.profiles_check) == 0:
@@ -269,7 +268,7 @@ class Window(tk.Frame):
 
     def window4(self):
         # MATERIALS
-        s = self.s + '/materials'
+        s = self.cura_dir.get() + '/materials'
 
         # get profile names
         if len(self.materials_check) == 0:
@@ -312,11 +311,11 @@ class Window(tk.Frame):
 
     def window5(self):
         def check_dir():
-            s = self.dir2.get().replace('\\', '/')
+            s = self.folder_name.get().replace('\\', '/')
             if os.path.exists(s):
                 self.run()
             elif s == '':
-                self.dir2.set('.')
+                self.folder_name.set('.')
                 self.run()
             else:
                 self.lowerLabel5.config(text='Cannot find this directory.', foreground='red')
