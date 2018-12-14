@@ -5,7 +5,6 @@ import shutil
 
 
 class Window(tk.Frame):
-    s = ''
     i = 0
     VARIABLES = []
     skipped = False
@@ -22,6 +21,7 @@ class Window(tk.Frame):
         if os.path.exists('./Cura_Directory'):
             f = open('./Cura_Directory')
             self.cura_dir.set(f.readline())
+            self.skipped = True
             f.close()
             self.i += 1
 
@@ -38,8 +38,7 @@ class Window(tk.Frame):
         self.upperLabel2 = ttk.Label(self,
                                      text='Please put the previously exported folder into the folder with the executable.\n'
                                           'Please input the name of the folder you would like to import.')
-        if self.i == 0:
-            self.skipped = True
+
         self.folder_name = tk.StringVar()
         self.entry2 = ttk.Entry(self, textvariable=self.folder_name)
         self.next_button2 = ttk.Button(self, text='Import')
@@ -51,9 +50,13 @@ class Window(tk.Frame):
     def run(self):
         self.cura_dir = self.cura_dir.get()
 
+        # import profiles if the profile folder is in the EXPORTED CuraFiles #N folder
         if os.path.exists('./' + self.folder_name.get() + '/profiles'):
             directory_information = []
             directory = os.listdir('./' + self.folder_name.get() + '/profiles')
+
+            # consider os.walk
+            # https://stackoverflow.com/questions/18383384/python-copy-files-to-a-new-directory-and-rename-if-file-name-already-exists
             for file_name in directory:
                 n = 0
                 new_file_name = file_name
@@ -79,7 +82,6 @@ class Window(tk.Frame):
                     for di in os.listdir(self.cura_dir + self.profile_folder(self.cura_dir) + '/'):
                         f = open(self.cura_dir + self.profile_folder(self.cura_dir) + '/' + di, 'r')
                         cura_lines = f.readlines()
-                        print(cura_lines[2][7:-1], name)
                         if cura_lines[2][7:-1] == name and dup_count == 1 or cura_lines[2][7:-1] == name + ' #' + str(dup_count) and dup_count != 1:
                             dup_count += 1
                             duplicates = True
@@ -101,6 +103,7 @@ class Window(tk.Frame):
                     for L in lines:
                         file.write(L)
 
+        # import profiles if the materials folder is in the EXPORTED CuraFiles #N folder
         if os.path.exists('./' + self.folder_name.get() + '/materials'):
             directory = os.listdir('./' + self.folder_name.get() + '/materials')
             for file_name in directory:
@@ -108,11 +111,9 @@ class Window(tk.Frame):
                 if os.path.exists(self.cura_dir + '/materials/' + file_name):
                     while os.path.exists(self.cura_dir + '/materials/' + file_name[:-17] + str(dup_count) + '.xml.fdm_material'):
                         dup_count += 1
-                    os.rename('./' + self.folder_name.get() + '/materials/' + file_name,
-                              './' + self.folder_name.get() + '/materials/' + file_name[:-17] + str(dup_count) + '.xml.fdm_material')
-                    file_name = file_name[:-17] + str(dup_count) + '.xml.fdm_material'
-                shutil.copy('./' + self.folder_name.get() + '/materials/' + file_name,
-                            self.cura_dir + '/materials')
+
+                shutil.copy('./' + self.folder_name.get() + '/materials/' + file_name[:-17] + '.xml.fdm_material',
+                            self.cura_dir + '/materials/' + file_name[:-17] + str(dup_count) + '.xml.fdm_material')
 
         self.master.destroy()
 
@@ -141,21 +142,26 @@ class Window(tk.Frame):
         self.clear(self)
         self.windows[self.i]()
 
+    # Cura profiles folder name. It was /quality until 3.4, where it was converted to /quality_change.
+    # quality_change is prioritized since it is the newer version, but program will pick /quailty if it doesn't
+    # exist
     @staticmethod
     def profile_folder(address):
-        version = address.split('/')[-1]
-        if float('.'.join(version.split('.')[0:2])) >= 3.4:
+        address = address.replace('\\', '/')
+        if os.path.exists(address + '/quality_changes'):
             return '/quality_changes'
         else:
             return '/quality'
 
     def window1(self):
         def check_dir():
+            # Cura profiles directory
             cura_profile_dir = self.cura_dir.get() + self.profile_folder(self.cura_dir.get())
             if os.path.exists(cura_profile_dir):
+                # write Cura directory to file for future use
                 if not os.path.exists('./Cura_Directory'):
                     file = open('./Cura_Directory', 'w+')
-                    file.write(cura_profile_dir[:-16])
+                    file.write(self.cura_dir.get())
                     file.close()
                 self.next_window()
             else:
@@ -168,12 +174,6 @@ class Window(tk.Frame):
             else:
                 self.next_button1.config(state=tk.NORMAL, command=check_dir)
 
-        # first time
-        if not self.cura_dir.get():
-            self.next_button1.config(state=tk.DISABLED, command=self.ignore)
-        else:
-            self.next_button1.config(state=tk.NORMAL, command=check_dir)
-
         # put each widget in place, reorient if was forgotten
         self.upperLabel1.grid(row=0, column=0, columnspan=3)
         self.lowerLabel1.grid(row=2, column=0, columnspan=2)
@@ -184,8 +184,10 @@ class Window(tk.Frame):
         self.cura_dir.trace('w', callback)
 
     def window2(self):
-        if self.skipped:
+        # remove back button if the first window was skipped
+        if not self.skipped:
             self.back_button2.grid(row=3, column=0, sticky=tk.W)
+
         self.next_button2.grid(row=3, column=0, sticky=tk.E)
         self.upperLabel2.grid(row=0, column=0)
         self.lowerLabel2.grid(row=2, column=0)
@@ -203,7 +205,7 @@ class Window(tk.Frame):
 
 def main():
     root = tk.Tk()
-    root.title("Cura Exporter")
+    root.title("Cura Importer")
     Window(root)
     root.mainloop()
 
