@@ -25,6 +25,7 @@ class Window(tk.Frame):
         if os.path.isfile('./Cura_Directory'):
             f = open('./Cura_Directory')
             self.cura_dir.set(f.readline())
+            self.skipped = True
             f.close()
             self.i += 1
 
@@ -40,8 +41,6 @@ class Window(tk.Frame):
         self.settings = [tk.IntVar(), tk.IntVar()]  # material profile
         self.VARIABLES += self.settings
 
-        if self.i == 0:
-            self.skipped = True
         self.back_button2 = ttk.Button(self, text='Back', command=self.last_window)
         self.upperLabel2 = ttk.Label(self, text='Export material or profile settings?')
         self.checkMaterial2 = ttk.Checkbutton(self, text='Material', variable=self.settings[0])
@@ -165,8 +164,8 @@ class Window(tk.Frame):
 
     @staticmethod
     def profile_folder(address):
-        version = address.split('/')[-1]
-        if float('.'.join(version.split('.')[0:2])) >= 3.4:
+        address = address.replace('\\', '/')
+        if os.path.exists(address + '/quality_changes'):
             return '/quality_changes'
         else:
             return '/quality'
@@ -177,7 +176,7 @@ class Window(tk.Frame):
             if os.path.exists(s):
                 if not os.path.exists('./Cura_Directory'):
                     file = open('./Cura_Directory', 'w+')
-                    file.write(s[:-16])
+                    file.write(self.cura_dir.get())
                     file.close()
                 self.next_window()
             else:
@@ -206,8 +205,8 @@ class Window(tk.Frame):
         self.next_button1.grid(row=3, column=1, columnspan=2)
 
     def window2(self):
-        if self.skipped:
-            self.back_button2.grid(row=3, column=0)
+        if not self.skipped:
+            self.back_button2.grid(row=3, column=0, sticky=tk.W)
         self.next_button2.grid(row=3, column=1)
         self.upperLabel2.grid(row=0, column=0)
         self.checkMaterial2.grid(row=1, column=0, sticky=tk.W)
