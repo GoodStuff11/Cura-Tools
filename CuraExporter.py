@@ -5,9 +5,13 @@ import shutil
 
 
 class Window(tk.Frame):
+    # window number
     i = 0
+
     VARIABLES = []
     skipped = False
+
+    # binary list of which profiles and materials you want to export, from checkboxes
     profiles_check = []
     materials_check = []
 
@@ -22,6 +26,7 @@ class Window(tk.Frame):
         self.config(padx=10, pady=10)
         self.grid(column=0, row=0)
 
+        # if you already have cura directory, skip first window
         if os.path.isfile('./Cura_Directory'):
             f = open('./Cura_Directory')
             self.cura_dir.set(f.readline())
@@ -171,6 +176,7 @@ class Window(tk.Frame):
             return '/quality'
 
     def window1(self):
+        # asks for your Cura directory, where we will access the profiles and materials
         def check_dir():
             s = self.cura_dir.get() + self.profile_folder(self.cura_dir.get())
             if os.path.exists(s):
@@ -205,6 +211,7 @@ class Window(tk.Frame):
         self.next_button1.grid(row=3, column=1, columnspan=2)
 
     def window2(self):
+        # Asks profiles or materials
         if not self.skipped:
             self.back_button2.grid(row=3, column=0, sticky=tk.W)
         self.next_button2.grid(row=3, column=1)
@@ -215,7 +222,7 @@ class Window(tk.Frame):
         def callback(*arg):
             self.windows_skip[3] = self.settings[0].get()  # material
             self.windows_skip[2] = self.settings[1].get()  # profile
-
+            # select at least one of the check boxes to continue
             if all(i.get() == 0 for i in self.settings):
                 self.next_button2.config(state=tk.DISABLED, command=self.ignore)
             else:
@@ -225,6 +232,7 @@ class Window(tk.Frame):
             i.trace('w', callback)
 
     def window3(self):
+        # asks for profiles to export
         # PROFILES
         s = self.cura_dir.get() + self.profile_folder(self.cura_dir.get())
 
@@ -266,6 +274,8 @@ class Window(tk.Frame):
             i.trace('w', callback)
 
     def window4(self):
+        # asks for materials to export
+
         # MATERIALS
         s = self.cura_dir.get() + '/materials'
 
@@ -309,6 +319,7 @@ class Window(tk.Frame):
             i.trace('w', callback)
 
     def window5(self):
+        # asks for which folder to put exported files into
         def check_dir():
             s = self.folder_name.get().replace('\\', '/')
             if os.path.exists(s):
