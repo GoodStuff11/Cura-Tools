@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import os
 import shutil
+import re
 
 
 class Window(tk.Frame):
@@ -47,14 +48,52 @@ class Window(tk.Frame):
 
         self.update_window()
 
+    @staticmethod
+    def find(string, search_list):
+        for l in search_list:
+            if re.search(string, l) is not None:
+                return l  # setting_version = 4
+
+    @staticmethod
+    def index(string, search_list):
+        for i in range(len(search_list)):
+            if re.search(string, search_list[i]) is not None:
+                return i  # setting_version = 4
+
     def run(self):
-        self.cura_dir = self.cura_dir.get()
+        self.cura_dir = self.cura_dir.get().replace('\\', '/')
+
+        # get the needed information in order for the profile to be compatible with earlier versions
+        # this includes: extruder = custom_extruder_1
+        # as well that the version must be correct
+        extruders = []
+        for ext_file in os.listdir(self.cura_dir + self.extruder_folder(self.cura_dir)):
+            try:
+                file = open(self.cura_dir + self.extruder_folder(self.cura_dir) + '/' + ext_file, 'r')
+                lines = file.readlines()
+                profile_version = lines[1]  # version = 4
+                extruders.append(lines[3].split(' ')[-1])  # definition = custom_extruder_1
+                file.close()
+            except PermissionError:
+                pass
+
+        extruders.sort(key=lambda x: -len(x))  # sorts from largest to smallest
+
+        for ext_file in os.listdir(self.cura_dir + '/extruders'):
+            try:
+                file = open(self.cura_dir + '/extruders/' + ext_file, 'r')
+                lines = file.readlines()
+                setting_version = self.find('setting_version', lines)
+                file.close()
+                break
+            except PermissionError:
+                pass
 
         # import profiles if the profile folder is in the EXPORTED CuraFiles #N folder
         if os.path.exists('./' + self.folder_name.get() + '/profiles'):
             directory_information = []
             directory = os.listdir('./' + self.folder_name.get() + '/profiles')
-
+            directory.sort(key=lambda x: -len(x))
             # consider os.walk
             # https://stackoverflow.com/questions/18383384/python-copy-files-to-a-new-directory-and-rename-if-file-name-already-exists
             for file_name in directory:
@@ -80,14 +119,29 @@ class Window(tk.Frame):
                 while duplicates:
                     duplicates = False
                     for di in os.listdir(self.cura_dir + self.profile_folder(self.cura_dir) + '/'):
-                        f = open(self.cura_dir + self.profile_folder(self.cura_dir) + '/' + di, 'r')
-                        cura_lines = f.readlines()
-                        if cura_lines[2][7:-1] == name and dup_count == 1 or cura_lines[2][7:-1] == name + ' #' + str(dup_count) and dup_count != 1:
-                            dup_count += 1
-                            duplicates = True
-                            break
-                        f.close()
-                directory_information.append([file_name, new_file_name, dup_count])
+                        try:
+                            f = open(self.cura_dir + self.profile_folder(self.cura_dir) + '/' + di, 'r')
+                            cura_lines = f.readlines()
+                            if cura_lines[2][7:-1] == name and dup_count == 1 or cura_lines[2][7:-1] == name + ' #' + str(dup_count) and dup_count != 1:
+                                dup_count += 1
+                                duplicates = True
+                                break
+                            f.close()
+                        except PermissionError:
+                            pass
+
+                # get extruder name and send that information
+                found = False
+                for ext in extruders:
+                    # ext[-1] is to remove \n
+                    if re.search(ext[:-1], file_name) is not None:
+                        # gives all important information for file
+                        found = True
+                        directory_information.append([file_name, new_file_name, dup_count, ext])
+                        extruders.remove(ext)
+                        break
+                if not found:
+                    directory_information.append([file_name, new_file_name, dup_count, None])
 
             # add to the file once all information has been received
             for d in directory_information:
@@ -99,10 +153,15 @@ class Window(tk.Frame):
                 # modify the file
                 if d[2] != 1:
                     lines[2] = lines[2][:-1] + ' #' + str(d[2]) + '\n'
+                if d[3] is not None:
+                    lines.insert(7, 'extruder = ' + d[3])  # specify the extruder of the profile
+                lines[self.index('version', lines)] = profile_version  # update version
+                lines[self.index('setting_version', lines)] = setting_version
                 with open(self.cura_dir + self.profile_folder(self.cura_dir) + '/' + d[1], 'w') as file:
                     for L in lines:
                         file.write(L)
 
+        # ---------------------------------------------------------
         # import profiles if the materials folder is in the EXPORTED CuraFiles #N folder
         if os.path.exists('./' + self.folder_name.get() + '/materials'):
             directory = os.listdir('./' + self.folder_name.get() + '/materials')
@@ -152,6 +211,14 @@ class Window(tk.Frame):
             return '/quality_changes'
         else:
             return '/quality'
+
+    @staticmethod
+    def extruder_folder(address):
+        address = address.replace('\\', '/')
+        if os.path.exists(address + '/definition_changes'):
+            return '/definition_changes'
+        else:
+            return '/definition'
 
     def window1(self):
         def check_dir():
