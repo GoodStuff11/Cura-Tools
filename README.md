@@ -1,17 +1,23 @@
 # Cura-Tools
-## Cura Profile Modifier##
+
+## Cura Profile Modifier ##
 
 -----------------------------------------------------
 ### INSTRUCTIONS ###
 
-1. Run CuraProfileModification.exe
+1. Run CuraProfileModification.py
 
-2. Copy and paste directory
-  This window will ask you to put the directory of the Cura software that you use. In order to get this information:
-  	* Open up Cura
-  	* Click on the "help" tab on the top left of the screen
-  	* Click on "show configuration folder"
-  	* The directory of your Cura files is in the bar in the upper right area. Click on it, and copy and paste it into the entry 
+2. Copy and paste directory (this will not appear if there is a Cura_Directory file in the Cura-Tools folder)
+
+   This window will ask you to put the directory of the Cura software that you use. In order to get this information:
+
+	* Open up Cura
+	* Click on the "help" tab on the top left of the screen
+	* Click on "show configuration folder"
+	* The directory of your Cura files is in the bar in the upper right area. Click on it, and copy and paste it into the entry
+		(eg. C:\Users\Students\AppData\Roaming\cura\3.6)
+	* A Cura_Directory file should appear in the folder, this is for the program to easily access the directory without needing
+		to ask every time the program is run. Deleting this file will only make you input the information once again.
 
 -----------------------------------------------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------------------------
@@ -33,25 +39,17 @@ Notes:
 
 ### INSTRUCTIONS ###
 
-1. Run CuraImporter.exe
+1. Run CuraImporter.py
 
 2. Copy and paste directory (this will not appear if there is a Cura_Directory file in the Cura-Tools folder)
 
-   This window will ask you to put the directory of the Cura software that you use. In order to get this information:
-
-	* Open up Cura
-	* Click on the "help" tab on the top left of the screen
-	* Click on "show configuration folder"
-	* The directory of your Cura files is in the bar in the upper right area. Click on it, and copy and paste it into the entry
-		(eg. C:\Users\Students\AppData\Roaming\cura\3.6)
-	* A Cura_Directory file should appear in the folder, this is for the program to easily access the directory without needing
-		to ask every time the program is run. Deleting this file will only make you input the information once again.
+   * *the same instructions apply here as in step 2 in Cura Profile Modifier.*
 
 3. Please input the name of the folder you would like to import.
 
-	-Put the EXPORTED CuraFiles #N folder (or whatever the exported folder has been named to) into the Cura-Tools folder
-	-Input the name of the folder, eg. EXPORTED CuraFiles #0
-	-Pressing import, will close the program, make sure that the folder contains the right files
+	* Put the EXPORTED CuraFiles #N folder (or whatever the exported folder has been named to) into the Cura-Tools folder
+	* Input the name of the folder, eg. EXPORTED CuraFiles #0
+	* Pressing import, will close the program, make sure that the folder contains the right files
 
 If Cura is already closed, you may open it Cura should display the changes. If Cura has been open the whole time, restart Cura and
 the same will happen.
@@ -74,20 +72,12 @@ Notes:
 
 ### INSTRUCTIONS ###
 
-1. Run CuraExporter.exe
+1. Run CuraExporter.py
 
 2. Copy and paste directory
 
-   This window will ask you to put the directory of the Cura software that you use. In order to get this information:
-
-	* Open up Cura
-	* Click on the "help" tab on the top left of the screen
-	* Click on "show configuration folder"
-	* The directory of your Cura files is in the bar in the upper right area. Click on it, and copy and paste it into the entry
-		(eg. C:\Users\Students\AppData\Roaming\cura\3.6)
-	* A Cura_Directory file should appear in the folder, this is for the program to easily access the directory without needing
-		to ask every time the program is run. Deleting this file will only make you input the information once again.
-
+   * *the same instructions apply here as in step 2 in Cura Profile Modifier.*
+   
 3. Export Material or profile settings?
 
 	* Check of whether you want to export materials, profiles or both.
@@ -103,7 +93,7 @@ Notes:
 5. Select which materials you would like to export (if you did not click on the "materials" option in window 4, you will not see this
 	window)
 
-	* The same instructions apply as above, in window 4
+	* The same instructions apply as above, in step 4
 
 6. Please input the directory where you want to export
 
