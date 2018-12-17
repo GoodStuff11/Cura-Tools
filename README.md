@@ -12,11 +12,11 @@ My program automatically goes into Cura's profile settings and removes the lines
 settings more useful.
 
 Notes:
-	* This program does delete select sections of certain profiles, so make sure that you are willing to manually document the
+* This program does delete select sections of certain profiles, so make sure that you are willing to manually document the
 		changes made if you are unsure if you will need something.
-	* This program works for any version of Cura
-	* If changes were made that you don't want to happen, you may manually go into Cura and fill in the values
-	* Print speed is a setting that is dependent on the material but it is not listed in the material settings. If you would like
+* This program works for any version of Cura
+* If changes were made that you don't want to happen, you may manually go into Cura and fill in the values
+* Print speed is a setting that is dependent on the material but it is not listed in the material settings. If you would like
 		to change this value, you will have to do so by changing the profile. For this case, you may want to make a new 
 		profile for each material when changing print speed.
 
