@@ -2,7 +2,26 @@
 
 ## Cura Profile Modifier ##
 
------------------------------------------------------
+This program attempts to support using material settings depending on the material, and profile settings depending on the print.
+Materials have a small amount of settings that are only dependent on the type of material, including print temperature and retraction
+speed. Materials automatically fill in these settings no matter what profile is being used, which offers a lot of flexibility. 
+Though, modifying the setting on a profile prevents the material from automatically filling out that setting, and there is no easy 
+way of reverting back to the material default.
+
+My program automatically goes into Cura's profile settings and removes the lines which materials could fill in, making material
+settings more useful.
+
+Notes:
+	* This program does delete select sections of certain profiles, so make sure that you are willing to manually document the
+		changes made if you are unsure if you will need something.
+	* This program works for any version of Cura
+	* If changes were made that you don't want to happen, you may manually go into Cura and fill in the values
+	* Print speed is a setting that is dependent on the material but it is not listed in the material settings. If you would like
+		to change this value, you will have to do so by changing the profile. For this case, you may want to make a new 
+		profile for each material when changing print speed.
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
 ### INSTRUCTIONS ###
 
 1. Run CuraProfileModification.py
@@ -14,11 +33,34 @@
 	* Open up Cura
 	* Click on the "help" tab on the top left of the screen
 	* Click on "show configuration folder"
+
 	* The directory of your Cura files is in the bar in the upper right area. Click on it, and copy and paste it into the entry
 		(eg. C:\Users\Students\AppData\Roaming\cura\3.6)
 	* A Cura_Directory file should appear in the folder, this is for the program to easily access the directory without needing
 		to ask every time the program is run. Deleting this file will only make you input the information once again.
 
+3. Check the profiles which you want to be modified
+
+	* All profiles on Cura will be listed here
+	* Check off any files whose settings you may want to modify
+
+4. Check in the settings you want to reset
+
+	* Check off any of the profile settings you want to reset
+	* Print temperature is not necessary to check off since Cura can already revert that to the material default
+
+5. Is all of this correct
+
+	* All information that the program will make use of will be listed, directory of Cura files, profiles, settings
+	* You go back to previous windows to make any changes to your options before pressing "Modify Files"
+	* Pressing "Modify Files" will start modifying the files, you will not be able to go back
+
+6. All changes made will be listed in this window
+
+	* If nothing is listed, no settings were changed. This may be because the profiles originally didn't have the settings defined
+	* Keep this window up or manually document it so that you are able change settings back using Cura.
+	* Pressing "Close" will end the program and you will no longer be able to see the changes made.
+	
 -----------------------------------------------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------------------------
 ## Cura Importer ##
