@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import os
 import shutil
+import pathlib
 
 
 class Window(tk.Frame):
@@ -9,7 +10,6 @@ class Window(tk.Frame):
     i = 0
 
     VARIABLES = []
-    skipped = False
 
     # binary list of which profiles and materials you want to export, from checkboxes
     profiles_check = []
@@ -17,72 +17,56 @@ class Window(tk.Frame):
 
     def __init__(self, master):
         tk.Frame.__init__(self, master)
-        self.windows = [self.window1, self.window2, self.window3, self.window4, self.window5]
+        self.windows = [self.window1, self.window2, self.window3, self.window4]
         self.windows_skip = [1] * len(self.windows)
 
-        self.cura_dir = tk.StringVar()
-        self.VARIABLES.append(self.cura_dir)
+        cura_address = str(pathlib.Path.home()).replace('\\', '/') + '/AppData/Roaming/cura'
+        self.cura_dir = cura_address + '/' + os.walk(cura_address).__next__()[1][-1]
 
         self.config(padx=10, pady=10)
         self.grid(column=0, row=0)
 
-        # if you already have cura directory, skip first window
-        if os.path.isfile('./Cura_Directory'):
-            f = open('./Cura_Directory')
-            self.cura_dir.set(f.readline())
-            self.skipped = True
-            f.close()
-            self.i += 1
-
-        # Window 1
-        self.next_button1 = ttk.Button(self, text='Next', command=self.ignore, state=tk.DISABLED)
-        self.lowerLabel1 = ttk.Label(self, text='')
-        self.upperLabel1 = ttk.Label(self,
-                                     text='Cura > help > show configuration folder\nCopy and paste directory')
-        self.entry1 = ttk.Entry(self, textvariable=self.cura_dir)
-        self.entry1.config(width=35)
-
-        # window 2
+        # window 1
         self.settings = [tk.IntVar(), tk.IntVar()]  # material profile
         self.VARIABLES += self.settings
 
-        self.back_button2 = ttk.Button(self, text='Back', command=self.last_window)
-        self.upperLabel2 = ttk.Label(self, text='Export material or profile settings?')
-        self.checkMaterial2 = ttk.Checkbutton(self, text='Material', variable=self.settings[0])
-        self.checkProfile2 = ttk.Checkbutton(self, text='Profile', variable=self.settings[1])
-        self.next_button2 = ttk.Button(self, text='Next', command=self.ignore, state=tk.DISABLED)
+        self.back_button1 = ttk.Button(self, text='Back', command=self.last_window)
+        self.upperLabel1 = ttk.Label(self, text='Export material or profile settings?')
+        self.checkMaterial1 = ttk.Checkbutton(self, text='Material', variable=self.settings[0])
+        self.checkProfile1 = ttk.Checkbutton(self, text='Profile', variable=self.settings[1])
+        self.next_button1 = ttk.Button(self, text='Next', command=self.ignore, state=tk.DISABLED)
 
-        # window 3
+        # window 2
         self.profiles = []
         self.new_profiles = []
+        self.check_box2 = []
+        self.entries2 = []
+        self.upperLabel2 = ttk.Label(self, text='Select which profiles you would like to export.\n'
+                                                'Input the name you want the files to be renamed to.\n'
+                                                'Inputting nothing will keep it as is.')
+        self.next_button2 = ttk.Button(self, text='Next', command=self.ignore, state=tk.DISABLED)
+        self.back_button2 = ttk.Button(self, text='Back', command=self.last_window)
+
+        # window 3
+        self.materials = []
+        self.new_materials = []
         self.check_box3 = []
         self.entries3 = []
-        self.upperLabel3 = ttk.Label(self, text='Select which profiles you would like to export.\n'
+        self.upperLabel3 = ttk.Label(self, text='Select which materials you would like to export.\n'
                                                 'Input the name you want the files to be renamed to.\n'
                                                 'Inputting nothing will keep it as is.')
         self.next_button3 = ttk.Button(self, text='Next', command=self.ignore, state=tk.DISABLED)
         self.back_button3 = ttk.Button(self, text='Back', command=self.last_window)
 
         # window 4
-        self.materials = []
-        self.new_materials = []
-        self.check_box4 = []
-        self.entries4 = []
-        self.upperLabel4 = ttk.Label(self, text='Select which materials you would like to export.\n'
-                                                'Input the name you want the files to be renamed to.\n'
-                                                'Inputting nothing will keep it as is.')
-        self.next_button4 = ttk.Button(self, text='Next', command=self.ignore, state=tk.DISABLED)
-        self.back_button4 = ttk.Button(self, text='Back', command=self.last_window)
-
-        # window 5
-        self.lowerLabel5 = ttk.Label(self, text='')
-        self.upperLabel5 = ttk.Label(self, text='Please input the directory where you want to export,\n'
+        self.lowerLabel4 = ttk.Label(self, text='')
+        self.upperLabel4 = ttk.Label(self, text='Please input the directory where you want to export,\n'
                                                 'typing in nothing will export to the file of the executable')
         self.folder_name = tk.StringVar()
         self.VARIABLES.append(self.folder_name)
-        self.entry5 = ttk.Entry(self, textvariable=self.folder_name)
-        self.next_button5 = ttk.Button(self, text='Export')
-        self.back_button5 = ttk.Button(self, text='Back', command=self.last_window)
+        self.entry4 = ttk.Entry(self, textvariable=self.folder_name)
+        self.next_button4 = ttk.Button(self, text='Export')
+        self.back_button4 = ttk.Button(self, text='Back', command=self.last_window)
 
         self.update_window()
 
@@ -106,7 +90,6 @@ class Window(tk.Frame):
             with open(self.cura_dir + self.profile_folder(self.cura_dir) + '/' + d, 'r') as file:
                 lines = file.readlines()
             if lines[2][7:-1] in [self.profiles[i] for i in range(len(self.profiles)) if self.profiles_check[i].get() == 1]:
-
                 # make copy of profile
                 shutil.copy(self.cura_dir + self.profile_folder(self.cura_dir) + '/' + d, address + '/profiles')
 
@@ -176,65 +159,27 @@ class Window(tk.Frame):
             return '/quality'
 
     def window1(self):
-        # asks for your Cura directory, where we will access the profiles and materials
-        def check_dir():
-            s = self.cura_dir.get() + self.profile_folder(self.cura_dir.get())
-            if os.path.exists(s):
-                if not os.path.exists('./Cura_Directory'):
-                    file = open('./Cura_Directory', 'w+')
-                    file.write(self.cura_dir.get())
-                    file.close()
-                self.next_window()
-            else:
-                self.lowerLabel1.config(text='Cannot find the right folder in this directory.', foreground='red')
-
-        # update
-        def callback(*args):
-            if not self.cura_dir.get():
-                self.next_button1.config(state=tk.DISABLED, command=self.ignore)
-            else:
-                self.next_button1.config(state=tk.NORMAL, command=check_dir)
-
-        self.cura_dir.trace('w', callback)
-
-        # first time
-        if not self.cura_dir.get():
-            self.next_button1.config(state=tk.DISABLED, command=self.ignore)
-        else:
-            self.next_button1.config(state=tk.NORMAL, command=check_dir)
-
-        # put each widget in place, reorient if was forgotten
-        self.upperLabel1.grid(row=0, column=0, columnspan=3)
-        self.lowerLabel1.grid(row=2, column=0, columnspan=2)
-        self.lowerLabel1.config(text='')
-        self.entry1.grid(row=1, sticky=tk.W, columnspan=2)
-        self.next_button1.grid(row=3, column=1, columnspan=2)
-
-    def window2(self):
-        # Asks profiles or materials
-        if not self.skipped:
-            self.back_button2.grid(row=3, column=0, sticky=tk.W)
-        self.next_button2.grid(row=3, column=1)
-        self.upperLabel2.grid(row=0, column=0)
-        self.checkMaterial2.grid(row=1, column=0, sticky=tk.W)
-        self.checkProfile2.grid(row=2, column=0, sticky=tk.W)
+        self.next_button1.grid(row=3, column=1)
+        self.upperLabel1.grid(row=0, column=0)
+        self.checkMaterial1.grid(row=1, column=0, sticky=tk.W)
+        self.checkProfile1.grid(row=2, column=0, sticky=tk.W)
 
         def callback(*arg):
             self.windows_skip[3] = self.settings[0].get()  # material
             self.windows_skip[2] = self.settings[1].get()  # profile
             # select at least one of the check boxes to continue
             if all(i.get() == 0 for i in self.settings):
-                self.next_button2.config(state=tk.DISABLED, command=self.ignore)
+                self.next_button1.config(state=tk.DISABLED, command=self.ignore)
             else:
-                self.next_button2.config(state=tk.NORMAL, command=self.next_window)
+                self.next_button1.config(state=tk.NORMAL, command=self.next_window)
 
         for i in self.settings:
             i.trace('w', callback)
 
-    def window3(self):
+    def window2(self):
         # asks for profiles to export
         # PROFILES
-        s = self.cura_dir.get() + self.profile_folder(self.cura_dir.get())
+        s = self.cura_dir + self.profile_folder(self.cura_dir)
 
         # get profile names
         if len(self.profiles_check) == 0:
@@ -253,31 +198,31 @@ class Window(tk.Frame):
                 self.VARIABLES.append(self.new_profiles[-1])
                 entry = ttk.Entry(self, textvariable=self.new_profiles[-1])
                 check = ttk.Checkbutton(self, variable=self.profiles_check[i], text=self.profiles[i])
-                self.entries3.append(entry)
-                self.check_box3.append(check)
+                self.entries2.append(entry)
+                self.check_box2.append(check)
 
-        self.upperLabel3.grid(row=0, column=0, columnspan=2, sticky=tk.W)
-        for i in range(len(self.entries3)):
-            self.check_box3[i].grid(row=1 + i, column=0, sticky=tk.W)
-            self.entries3[i].grid(row=1 + i, column=1, sticky=tk.E)
+        self.upperLabel2.grid(row=0, column=0, columnspan=2, sticky=tk.W)
+        for i in range(len(self.entries2)):
+            self.check_box2[i].grid(row=1 + i, column=0, sticky=tk.W)
+            self.entries2[i].grid(row=1 + i, column=1, sticky=tk.E)
 
-        self.back_button3.grid(row=1 + len(self.profiles), column=0, sticky=tk.W)
-        self.next_button3.grid(row=1 + len(self.profiles), column=1, sticky=tk.E)
+        self.back_button2.grid(row=1 + len(self.profiles), column=0, sticky=tk.W)
+        self.next_button2.grid(row=1 + len(self.profiles), column=1, sticky=tk.E)
 
         def callback(*arg):
             if all(i.get() == 0 for i in self.profiles_check):
-                self.next_button3.config(state=tk.DISABLED, command=self.ignore)
+                self.next_button2.config(state=tk.DISABLED, command=self.ignore)
             else:
-                self.next_button3.config(state=tk.NORMAL, command=self.next_window)
+                self.next_button2.config(state=tk.NORMAL, command=self.next_window)
 
         for i in self.profiles_check:
             i.trace('w', callback)
 
-    def window4(self):
+    def window3(self):
         # asks for materials to export
 
         # MATERIALS
-        s = self.cura_dir.get() + '/materials'
+        s = self.cura_dir + '/materials'
 
         # get profile names
         if len(self.materials_check) == 0:
@@ -299,26 +244,26 @@ class Window(tk.Frame):
                 self.VARIABLES.append(self.new_materials[-1])
                 check = ttk.Checkbutton(self, variable=self.materials_check[i], text=self.materials[i])
                 entry = ttk.Entry(self, textvariable=self.new_materials[-1])
-                self.entries4.append(entry)
-                self.check_box4.append(check)
+                self.entries3.append(entry)
+                self.check_box3.append(check)
 
-        self.upperLabel4.grid(row=0, column=0, columnspan=2, sticky=tk.W)
-        for i in range(len(self.entries4)):
-            self.check_box4[i].grid(row=1 + i, column=0, sticky=tk.W)
-            self.entries4[i].grid(row=1 + i, column=1, sticky=tk.E)
-        self.back_button4.grid(row=1 + len(self.materials), column=0, sticky=tk.W)
-        self.next_button4.grid(row=1 + len(self.materials), column=1, sticky=tk.E)
+        self.upperLabel3.grid(row=0, column=0, columnspan=2, sticky=tk.W)
+        for i in range(len(self.entries3)):
+            self.check_box3[i].grid(row=1 + i, column=0, sticky=tk.W)
+            self.entries3[i].grid(row=1 + i, column=1, sticky=tk.E)
+        self.back_button3.grid(row=1 + len(self.materials), column=0, sticky=tk.W)
+        self.next_button3.grid(row=1 + len(self.materials), column=1, sticky=tk.E)
 
         def callback(*arg):
             if all(i.get() == 0 for i in self.materials_check):
-                self.next_button4.config(state=tk.DISABLED, command=self.ignore)
+                self.next_button3.config(state=tk.DISABLED, command=self.ignore)
             else:
-                self.next_button4.config(state=tk.NORMAL, command=self.next_window)
+                self.next_button3.config(state=tk.NORMAL, command=self.next_window)
 
         for i in self.materials_check:
             i.trace('w', callback)
 
-    def window5(self):
+    def window4(self):
         # asks for which folder to put exported files into
         def check_dir():
             s = self.folder_name.get().replace('\\', '/')
@@ -328,16 +273,16 @@ class Window(tk.Frame):
                 self.folder_name.set('.')
                 self.run()
             else:
-                self.lowerLabel5.config(text='Cannot find this directory.', foreground='red')
+                self.lowerLabel4.config(text='Cannot find this directory.', foreground='red')
 
-        self.upperLabel5.grid(row=0, column=0)
-        self.entry5.grid(row=1, column=0, sticky=tk.W)
-        self.entry5.config(width=40)
-        self.lowerLabel5.grid(row=2, column=0)
-        self.lowerLabel5.config(text='')
-        self.next_button5.grid(row=3, column=0, sticky=tk.E)
-        self.back_button5.grid(row=3, column=0, sticky=tk.W)
-        self.next_button5.config(command=check_dir)
+        self.upperLabel4.grid(row=0, column=0)
+        self.entry4.grid(row=1, column=0, sticky=tk.W)
+        self.entry4.config(width=40)
+        self.lowerLabel4.grid(row=2, column=0)
+        self.lowerLabel4.config(text='')
+        self.next_button4.grid(row=3, column=0, sticky=tk.E)
+        self.back_button4.grid(row=3, column=0, sticky=tk.W)
+        self.next_button4.config(command=check_dir)
 
 
 def main():
