@@ -3,48 +3,33 @@ from tkinter import ttk
 import os
 import shutil
 import re
-
+import pathlib
 
 class Window(tk.Frame):
     i = 0
     VARIABLES = []
-    skipped = False
 
     def __init__(self, master):
         tk.Frame.__init__(self, master)
-        self.windows = [self.window1, self.window2]
-        self.cura_dir = tk.StringVar()
-        self.VARIABLES.append(self.cura_dir)
+        master.title("Cura Importer")
+        self.windows = [self.window1]
+
+        cura_address = str(pathlib.Path.home()).replace('\\', '/') + '/AppData/Roaming/cura'
+        self.cura_dir = cura_address + '/' + os.walk(cura_address).__next__()[1][-1]
 
         self.config(padx=10, pady=10)
         self.grid(column=0, row=0)
 
-        if os.path.exists('./Cura_Directory'):
-            f = open('./Cura_Directory')
-            self.cura_dir.set(f.readline())
-            self.skipped = True
-            f.close()
-            self.i += 1
-
         # Window 1
-        self.next_button1 = ttk.Button(self, text='Next')
-        self.lowerLabel1 = ttk.Label(self, text='')
         self.upperLabel1 = ttk.Label(self,
-                                     text='Cura > help > show configuration folder\n'
-                                          'Copy and paste directory')
-        self.entry1 = ttk.Entry(self, textvariable=self.cura_dir)
-        self.entry1.config(width=35)
-
-        # Window 2
-        self.upperLabel2 = ttk.Label(self,
                                      text='Please put the previously exported folder into the folder with the executable.\n'
                                           'Please input the name of the folder you would like to import.')
 
         self.folder_name = tk.StringVar()
-        self.entry2 = ttk.Entry(self, textvariable=self.folder_name)
-        self.next_button2 = ttk.Button(self, text='Import')
-        self.back_button2 = ttk.Button(self, text='Back')
-        self.lowerLabel2 = ttk.Label(self, text='')
+        self.entry1 = ttk.Entry(self, textvariable=self.folder_name)
+        self.next_button1 = ttk.Button(self, text='Import')
+        self.back_button1 = ttk.Button(self, text='Back')
+        self.lowerLabel1 = ttk.Label(self, text='')
 
         self.update_window()
 
@@ -61,8 +46,6 @@ class Window(tk.Frame):
                 return i  # setting_version = 4
 
     def run(self):
-        self.cura_dir = self.cura_dir.get().replace('\\', '/')
-
         # get the needed information in order for the profile to be compatible with earlier versions
         # this includes: extruder = custom_extruder_1
         # as well that the version must be correct
@@ -221,58 +204,24 @@ class Window(tk.Frame):
             return '/definition'
 
     def window1(self):
-        def check_dir():
-            # Cura profiles directory
-            cura_profile_dir = self.cura_dir.get() + self.profile_folder(self.cura_dir.get())
-            if os.path.exists(cura_profile_dir):
-                # write Cura directory to file for future use
-                if not os.path.exists('./Cura_Directory'):
-                    file = open('./Cura_Directory', 'w+')
-                    file.write(self.cura_dir.get())
-                    file.close()
-                self.next_window()
-            else:
-                self.lowerLabel1.config(text='Cannot find the right folder in this directory.', foreground='red')
 
-        # update
-        def callback(*args):
-            if not self.cura_dir.get():
-                self.next_button1.config(state=tk.DISABLED, command=self.ignore)
-            else:
-                self.next_button1.config(state=tk.NORMAL, command=check_dir)
-
-        # put each widget in place, reorient if was forgotten
-        self.upperLabel1.grid(row=0, column=0, columnspan=3)
-        self.lowerLabel1.grid(row=2, column=0, columnspan=2)
-        self.lowerLabel1.config(text='')
-        self.entry1.grid(row=1, sticky=tk.W, columnspan=2)
-        self.next_button1.grid(row=3, column=1, columnspan=2)
-
-        self.cura_dir.trace('w', callback)
-
-    def window2(self):
-        # remove back button if the first window was skipped
-        if not self.skipped:
-            self.back_button2.grid(row=3, column=0, sticky=tk.W)
-
-        self.next_button2.grid(row=3, column=0, sticky=tk.E)
-        self.upperLabel2.grid(row=0, column=0)
-        self.lowerLabel2.grid(row=2, column=0)
-        self.entry2.grid(row=1, column=0, sticky=tk.W)
-        self.entry2.config(width=50)
+        self.next_button1.grid(row=3, column=0, sticky=tk.E)
+        self.upperLabel1.grid(row=0, column=0)
+        self.lowerLabel1.grid(row=2, column=0)
+        self.entry1.grid(row=1, column=0, sticky=tk.W)
+        self.entry1.config(width=50)
 
         def check_dir():
             if os.path.exists('./' + self.folder_name.get()) and self.folder_name.get():
                 self.run()
             else:
-                self.lowerLabel2.config(text='Cannot find this directory.', foreground='red')
+                self.lowerLabel1.config(text='Cannot find this directory.', foreground='red')
 
-        self.next_button2.config(command=check_dir)
+        self.next_button1.config(command=check_dir)
 
 
 def main():
     root = tk.Tk()
-    root.title("Cura Importer")
     Window(root)
     root.mainloop()
 
