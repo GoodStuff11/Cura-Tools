@@ -17,6 +17,7 @@ class Window(tk.Frame):
 
     def __init__(self, master):
         tk.Frame.__init__(self, master)
+        master.title("Cura Exporter")
         self.windows = [self.window1, self.window2, self.window3, self.window4]
         self.windows_skip = [1] * len(self.windows)
 
@@ -71,7 +72,6 @@ class Window(tk.Frame):
         self.update_window()
 
     def run(self):
-        self.cura_dir = self.cura_dir.get()
         # create folder to export to
         n = 0
         name = self.folder_name.get() + '/' + 'EXPORTED CuraFiles #'
@@ -287,7 +287,6 @@ class Window(tk.Frame):
 
 def main():
     root = tk.Tk()
-    root.title("Cura Exporter")
     Window(root)
     root.mainloop()
 
