@@ -15,7 +15,12 @@ class Window(tk.Frame):
         self.windows = [self.window1]
 
         cura_address = str(pathlib.Path.home()).replace('\\', '/') + '/AppData/Roaming/cura'
-        self.cura_dir = cura_address + '/' + os.walk(cura_address).__next__()[1][-1]
+        versions = os.walk(cura_address).__next__()[1]
+        for v in versions[::-1]:
+            if os.path.exists(cura_address + '/' + v + '/cura.cfg'):
+                version = v
+                break
+        self.cura_dir = cura_address + '/' + version
 
         self.config(padx=10, pady=10)
         self.grid(column=0, row=0)
