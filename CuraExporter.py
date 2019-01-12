@@ -43,6 +43,9 @@ class Window(tk.Frame):
             temp = ttk.Radiobutton(self, text=v, value=v, variable=self.radiobuttons_var0)
             self.radiobuttons0.append(temp)
 
+        self.cura_dir = self.cura_address + '/' + self.radiobuttons_var0.get()
+        self.cura_profile_dir = self.cura_dir + self.profile_folder(self.cura_dir)
+
         def define_cura():
             self.cura_dir = self.cura_address + '/' + self.radiobuttons_var0.get()
             self.next_window()
