@@ -37,9 +37,13 @@ class Window(tk.Frame):
             temp = ttk.Radiobutton(self, text=v, value=v, variable=self.radiobuttons_var0)
             self.radiobuttons0.append(temp)
 
+        self.cura_dir = self.cura_address + '/' + self.radiobuttons_var0.get()
+        self.cura_profile_dir = self.cura_dir + self.profile_folder(self.cura_dir)
+
         def define_cura():
             self.cura_dir = self.cura_address + '/' + self.radiobuttons_var0.get()
             self.next_window()
+
         self.next_button0 = ttk.Button(self, text='Next', command=define_cura)
         self.skipped = False
         if len(versions) == 1:
@@ -54,7 +58,7 @@ class Window(tk.Frame):
         self.upperLabel1 = ttk.Label(self, text='Select the exported folders which you want to import to Cura.\n'
                                                 'Your folder must be in the same folder as this executable for it to appear.')
         self.import_button1 = ttk.Button(self, text='Import', command=self.ignore, state=tk.DISABLED)
-
+        self.back_button1 = ttk.Button(self, text='Back', command=self.last_window)
         self.update_window()
 
     @staticmethod
@@ -253,6 +257,8 @@ class Window(tk.Frame):
         for i in range(len(self.exported_folders)):
             self.check_box1[i].grid(row=1 + i, column=0, sticky=tk.W)
         self.import_button1.grid(row=1 + len(self.exported_folders), column=1, sticky=tk.E)
+        if not self.skipped:
+            self.back_button1.grid(row=1 + len(self.exported_folders), column=0, sticky=tk.W)
 
         def callback(*arg):
             if all(i.get() == 0 for i in folders_check):
