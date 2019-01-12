@@ -3,6 +3,7 @@ from tkinter import ttk
 import os
 import pathlib
 
+
 class Window(tk.Frame):
     i = 0
     profiles_check = []
@@ -13,22 +14,47 @@ class Window(tk.Frame):
         tk.Frame.__init__(self, master)
         master.title("Cura Profile Modifier")
 
-        cura_address = str(pathlib.Path.home()).replace('\\', '/') + '/AppData/Roaming/cura'
-        self.cura_dir = cura_address + '/' + os.walk(cura_address).__next__()[1][-1]
-        self.cura_profile_dir = self.cura_dir + self.profile_folder(self.cura_dir)
+        # get address of cura and the latest cura version you have
+        self.cura_address = str(pathlib.Path.home()).replace('\\', '/') + '/AppData/Roaming/cura'
+        versions = os.walk(self.cura_address).__next__()[1]
+        for v in versions[::-1]:
+            if not os.path.exists(self.cura_address + '/' + v + '/cura.cfg'):
+                versions.remove(v)
 
-        self.windows = [self.window1, self.window2, self.window3, self.window4, self.window5]
+        self.windows = [self.window0, self.window1, self.window2, self.window3, self.window4, self.window5]
         self.windows_skip = [1] * len(self.windows)
         self.config(padx=10, pady=10)
         self.grid(column=0, row=0)
 
         # define all widgets
-        # window 1
 
-        self.upperLabel1 = ttk.Label(self,
+        # window 0
+
+        self.upperLabel0 = ttk.Label(self,
                                      text='This program will ask for information so that it\n'
                                           ' can automatically manipulate the Cura files.')
-        self.next_button1 = ttk.Button(self, text='Next', command=self.next_window)
+        self.next_button0 = ttk.Button(self, text='Next', command=self.next_window)
+
+        # window 1
+        self.upperLabel1 = ttk.Label(self, text='Select a Cura version to import to.')
+        self.radiobuttons1 = []
+        self.radiobuttons_var1 = tk.StringVar()
+        self.radiobuttons_var1.set(versions[-1])
+        for v in versions:
+            temp = ttk.Radiobutton(self, text=v, value=v, variable=self.radiobuttons_var1)
+            self.radiobuttons1.append(temp)
+
+        self.cura_dir = self.cura_address + '/' + self.radiobuttons_var1.get()
+        self.cura_profile_dir = self.cura_dir + self.profile_folder(self.cura_dir)
+
+        def define_cura():
+            self.cura_dir = self.cura_address + '/' + self.radiobuttons_var1.get()
+            self.cura_profile_dir = self.cura_dir + self.profile_folder(self.cura_dir)
+            self.next_window()
+
+        self.next_button1 = ttk.Button(self, text='Next', command=define_cura)
+        if len(versions) == 1:
+            self.windows_skip[1] = 0
 
         # window2
         self.profiles = []
@@ -132,10 +158,6 @@ class Window(tk.Frame):
         self.clear(self)
         self.windows[self.i]()
 
-    def window1(self):
-        self.next_button1.grid(row=2, columnspan=3)
-        self.upperLabel1.grid(row=0, column=0, columnspan=3)
-
     @staticmethod
     def profile_folder(address):
         address = address.replace('\\', '/')
@@ -143,6 +165,16 @@ class Window(tk.Frame):
             return '/quality_changes'
         else:
             return '/quality'
+
+    def window0(self):
+        self.next_button0.grid(row=2, columnspan=3)
+        self.upperLabel0.grid(row=0, column=0, columnspan=3)
+
+    def window1(self):
+        self.next_button1.grid(row=len(self.radiobuttons1) + 1, column=0, sticky=tk.E)
+        self.upperLabel1.grid(row=0, column=0)
+        for i in range(len(self.radiobuttons1)):
+            self.radiobuttons1[i].grid(row=i + 1, column=0, sticky=tk.W)
 
     def window2(self):
         # PROFILES
