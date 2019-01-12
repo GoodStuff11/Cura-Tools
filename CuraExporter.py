@@ -18,20 +18,39 @@ class Window(tk.Frame):
     def __init__(self, master):
         tk.Frame.__init__(self, master)
         master.title("Cura Exporter")
-        self.windows = [self.window1, self.window2, self.window3, self.window4, self.window5]
+        self.windows = [self.window0, self.window1, self.window2, self.window3, self.window4, self.window5]
         self.windows_skip = [1] * len(self.windows)
 
         # get address of cura and the latest cura version you have
-        cura_address = str(pathlib.Path.home()).replace('\\', '/') + '/AppData/Roaming/cura'
-        versions = os.walk(cura_address).__next__()[1]
+        self.cura_address = str(pathlib.Path.home()).replace('\\', '/') + '/AppData/Roaming/cura'
+        versions = os.walk(self.cura_address).__next__()[1]
         for v in versions[::-1]:
-            if os.path.exists(cura_address + '/' + v + '/cura.cfg'):
-                self.version = v
-                break
-        self.cura_dir = cura_address + '/' + self.version
+            if not os.path.exists(self.cura_address + '/' + v + '/cura.cfg'):
+                versions.remove(v)
+
+        # define later
+        self.cura_dir = ''
 
         self.config(padx=10, pady=10)
         self.grid(column=0, row=0)
+
+        # window 0
+        self.upperLabel0 = ttk.Label(self, text='Select a Cura version to export from.')
+        self.radiobuttons0 = []
+        self.radiobuttons_var0 = tk.StringVar()
+        self.radiobuttons_var0.set(versions[-1])
+        for v in versions:
+            temp = ttk.Radiobutton(self, text=v, value=v, variable=self.radiobuttons_var0)
+            self.radiobuttons0.append(temp)
+
+        def define_cura():
+            self.cura_dir = self.cura_address + '/' + self.radiobuttons_var0.get()
+            self.next_window()
+        self.next_button0 = ttk.Button(self, text='Next', command=define_cura)
+        self.skipped = False
+        if len(versions) == 1:
+            self.skipped = True
+            self.i = 1
 
         # window 1
         self.settings = [tk.IntVar(), tk.IntVar()]  # material profile
@@ -82,7 +101,7 @@ class Window(tk.Frame):
         self.folder_name = tk.StringVar()
         self.entry5 = ttk.Entry(self, textvariable=self.folder_name)
         self.next_button5 = ttk.Button(self, text='Export')
-        self.back_button5 = ttk.Button(self, text='Back',command=self.last_window)
+        self.back_button5 = ttk.Button(self, text='Back', command=self.last_window)
         self.lowerLabel5 = ttk.Label(self, text='')
 
         self.update_window()
@@ -151,7 +170,7 @@ class Window(tk.Frame):
         while self.windows_skip[self.i] == 0:
             self.i += 1
         self.update_window()
-        print(self.i)
+
     def last_window(self):
         self.i -= 1
         while self.windows_skip[self.i] == 0:
@@ -173,8 +192,16 @@ class Window(tk.Frame):
         else:
             return '/quality'
 
+    def window0(self):
+        self.next_button0.grid(row=len(self.radiobuttons0) + 1, column=0, sticky=tk.E)
+        self.upperLabel0.grid(row=0, column=0)
+        for i in range(len(self.radiobuttons0)):
+            self.radiobuttons0[i].grid(row=i + 1, column=0, sticky=tk.W)
+
     def window1(self):
         self.next_button1.grid(row=3, column=1)
+        if not self.skipped:
+            self.back_button1.grid(row=3, column=0,sticky=tk.W)
         self.upperLabel1.grid(row=0, column=0)
         self.checkMaterial1.grid(row=1, column=0, sticky=tk.W)
         self.checkProfile1.grid(row=2, column=0, sticky=tk.W)
@@ -182,7 +209,6 @@ class Window(tk.Frame):
         def callback(*arg):
             self.windows_skip[2] = self.settings[0].get()  # material
             self.windows_skip[1] = self.settings[1].get()  # profile
-            print(self.windows_skip)
             # select at least one of the check boxes to continue
             if all(i.get() == 0 for i in self.settings):
                 self.next_button1.config(state=tk.DISABLED, command=self.ignore)
@@ -289,7 +315,7 @@ class Window(tk.Frame):
                     self.n += 1
                 self.upperLabel5.config(
                     text='Please input the name of the exported folder.'
-                         '\nLeaving this blank will call it EXPORTED CuraFiles #'+str(self.n))
+                         '\nLeaving this blank will call it EXPORTED CuraFiles #' + str(self.n))
 
             s = self.folder_dir.get().replace('\\', '/')
             if os.path.exists(s):
