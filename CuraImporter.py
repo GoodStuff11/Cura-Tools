@@ -165,7 +165,9 @@ class Window(tk.Frame):
                     # modify the file
                     if d[2] != 1:
                         lines[2] = lines[2][:-1] + ' #' + str(d[2]) + '\n'
-                    if d[3] is not None:
+                    # insert "extruder = " only if an extruder was found AND "extruder = " isnt currently in the file
+                    # having multiple "extruder=" causes corruption
+                    if d[3] is not None and 'extruder = ' + d[3] not in lines:
                         lines.insert(7, 'extruder = ' + d[3])  # specify the extruder of the profile
                     lines[self.index('version', lines)] = profile_version  # update version
                     lines[self.index('setting_version', lines)] = setting_version
