@@ -6,7 +6,6 @@ import pathlib
 
 class Window(tk.Frame):
     i = 0
-    profiles_check = []
     VARIABLES = []
 
     def __init__(self, master):
@@ -47,17 +46,15 @@ class Window(tk.Frame):
         self.cura_dir = self.cura_address + '/' + self.radiobuttons_var1.get()
         self.cura_profile_dir = self.cura_dir + self.profile_folder(self.cura_dir)
 
-        def define_cura():
-            self.cura_dir = self.cura_address + '/' + self.radiobuttons_var1.get()
-            self.cura_profile_dir = self.cura_dir + self.profile_folder(self.cura_dir)
-            self.next_window()
-
-        self.next_button1 = ttk.Button(self, text='Next', command=define_cura)
+        self.next_button1 = ttk.Button(self, text='Next', command=self.next_window)
         if len(versions) == 1:
             self.windows_skip[1] = 0
 
         # window2
-        self.profiles = []
+        self.profiles = []  # list of names of profiles
+        self.profiles_check = []  # profile checkbox variables IntVar()
+        self.new_profiles = []  # profile entry variables StringVar()
+
         self.VARIABLES += self.profiles
         self.upperLabel2 = ttk.Label(self,
                                      text='Check the profiles which you want to be modified')
@@ -175,6 +172,19 @@ class Window(tk.Frame):
         self.upperLabel1.grid(row=0, column=0)
         for i in range(len(self.radiobuttons1)):
             self.radiobuttons1[i].grid(row=i + 1, column=0, sticky=tk.W)
+
+        def callback(*arg):
+            self.cura_dir = self.cura_address + '/' + self.radiobuttons_var1.get()
+            self.cura_profile_dir = self.cura_dir + self.profile_folder(self.cura_dir)
+
+            if len(self.profiles_check) != 0:
+                self.check_box2 = []
+
+                self.new_profiles = []
+                self.profiles_check = []
+                self.profiles = []
+
+        self.radiobuttons_var1.trace('w', callback)
 
     def window2(self):
         # PROFILES
