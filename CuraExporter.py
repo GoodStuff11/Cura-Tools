@@ -7,13 +7,11 @@ import pathlib
 
 class Window(tk.Frame):
     # window number
-    i = 0
+    i = 0  # window number
 
-    VARIABLES = []
+    VARIABLES = []  # list of trace which are deleted between windows
 
     # binary list of which profiles and materials you want to export, from checkboxes
-    profiles_check = []
-    materials_check = []
 
     def __init__(self, master):
         tk.Frame.__init__(self, master)
@@ -46,10 +44,7 @@ class Window(tk.Frame):
         self.cura_dir = self.cura_address + '/' + self.radiobuttons_var0.get()
         self.cura_profile_dir = self.cura_dir + self.profile_folder(self.cura_dir)
 
-        def define_cura():
-            self.cura_dir = self.cura_address + '/' + self.radiobuttons_var0.get()
-            self.next_window()
-        self.next_button0 = ttk.Button(self, text='Next', command=define_cura)
+        self.next_button0 = ttk.Button(self, text='Next', command=self.next_window)
         self.skipped = False
         if len(versions) == 1:
             self.skipped = True
@@ -66,8 +61,9 @@ class Window(tk.Frame):
         self.next_button1 = ttk.Button(self, text='Next', command=self.ignore, state=tk.DISABLED)
 
         # window 2
-        self.profiles = []
-        self.new_profiles = []
+        self.profiles = []  # list of names of profiles
+        self.profiles_check = []  # profile checkbox variables IntVar()
+        self.new_profiles = []  # profile entry variables StringVar()
         self.check_box2 = []
         self.entries2 = []
         self.upperLabel2 = ttk.Label(self, text='Select which profiles you would like to export.\n'
@@ -77,8 +73,9 @@ class Window(tk.Frame):
         self.back_button2 = ttk.Button(self, text='Back', command=self.last_window)
 
         # window 3
-        self.materials = []
-        self.new_materials = []
+        self.materials = []  # list of names of materials
+        self.new_materials = []  # material entry variables StringVar()
+        self.materials_check = []  # material checkbox variables IntVar()
         self.check_box3 = []
         self.entries3 = []
         self.upperLabel3 = ttk.Label(self, text='Select which materials you would like to export.\n'
@@ -201,17 +198,37 @@ class Window(tk.Frame):
         for i in range(len(self.radiobuttons0)):
             self.radiobuttons0[i].grid(row=i + 1, column=0, sticky=tk.W)
 
+        def callback(*arg):
+            self.cura_dir = self.cura_address + '/' + self.radiobuttons_var0.get()
+            # remove all widgets and traces in windows 2 and 3
+            if len(self.profiles_check) != 0:
+                self.entries2 = []
+                self.check_box2 = []
+
+                self.new_profiles = []
+                self.profiles_check = []
+                self.profiles = []
+            if len(self.materials_check) != 0:
+                self.entries3 = []
+                self.check_box3 = []
+
+                self.new_materials = []
+                self.materials_check = []
+                self.materials = []
+
+        self.radiobuttons_var0.trace('w', callback)
+
     def window1(self):
         self.next_button1.grid(row=3, column=1)
         if not self.skipped:
-            self.back_button1.grid(row=3, column=0,sticky=tk.W)
+            self.back_button1.grid(row=3, column=0, sticky=tk.W)
         self.upperLabel1.grid(row=0, column=0)
         self.checkMaterial1.grid(row=1, column=0, sticky=tk.W)
         self.checkProfile1.grid(row=2, column=0, sticky=tk.W)
 
         def callback(*arg):
-            self.windows_skip[2] = self.settings[0].get()  # material
-            self.windows_skip[1] = self.settings[1].get()  # profile
+            self.windows_skip[3] = self.settings[0].get()  # material
+            self.windows_skip[2] = self.settings[1].get()  # profile
             # select at least one of the check boxes to continue
             if all(i.get() == 0 for i in self.settings):
                 self.next_button1.config(state=tk.DISABLED, command=self.ignore)
@@ -227,6 +244,8 @@ class Window(tk.Frame):
         s = self.cura_dir + self.profile_folder(self.cura_dir)
 
         # get profile names
+
+        # only do if you haven't been to this window before
         if len(self.profiles_check) == 0:
             directory = os.listdir(s)
             for d in directory:
