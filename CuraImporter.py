@@ -111,9 +111,9 @@ class Window(tk.Frame):
                     pass
 
             # import profiles if the profile folder is in the EXPORTED CuraFiles #N folder
-            if os.path.exists(self.folder_dir + '/' + folder_name + '/profiles'):
+            if os.path.exists(self.folder_dir.get() + '/' + folder_name + '/profiles'):
                 directory_information = []
-                directory = os.listdir(self.folder_dir + '/' + folder_name + '/profiles')
+                directory = os.listdir(self.folder_dir.get() + '/' + folder_name + '/profiles')
                 directory.sort(key=lambda x: -len(x))
                 # consider os.walk
                 # https://stackoverflow.com/questions/18383384/python-copy-files-to-a-new-directory-and-rename-if-file-name-already-exists
@@ -132,7 +132,7 @@ class Window(tk.Frame):
                             n += 1
                         new_file_name = file_name[:-9] + '_' + str(n) + '.inst.cfg'
 
-                    with open(self.folder_dir + '/' + folder_name + '/profiles/' + file_name, 'r') as f:
+                    with open(self.folder_dir.get() + '/' + folder_name + '/profiles/' + file_name, 'r') as f:
                         file_lines = f.readlines()
                         name = file_lines[2][7:-1]
 
@@ -170,9 +170,9 @@ class Window(tk.Frame):
 
                 # add to the file once all information has been received
                 for d in directory_information:
-                    with open(self.folder_dir + '/' + folder_name + '/profiles/' + d[0], 'r') as file:
+                    with open(self.folder_dir.get() + '/' + folder_name + '/profiles/' + d[0], 'r') as file:
                         lines = file.readlines()
-                    shutil.copy(self.folder_dir + '/' + folder_name + '/profiles/' + d[0],
+                    shutil.copy(self.folder_dir.get() + '/' + folder_name + '/profiles/' + d[0],
                                 self.cura_dir + self.profile_folder(self.cura_dir) + '/' + d[1])
 
                     # modify the file
@@ -190,8 +190,8 @@ class Window(tk.Frame):
 
             # ---------------------------------------------------------
             # import profiles if the materials folder is in the EXPORTED CuraFiles #N folder
-            if os.path.exists(self.folder_dir + '/' + folder_name + '/materials'):
-                directory = os.listdir(self.folder_dir + '/' + folder_name + '/materials')
+            if os.path.exists(self.folder_dir.get() + '/' + folder_name + '/materials'):
+                directory = os.listdir(self.folder_dir.get() + '/' + folder_name + '/materials')
                 for file_name in directory:
                     dup_count = 0
                     if os.path.exists(self.cura_dir + '/materials/' + file_name):
@@ -200,7 +200,7 @@ class Window(tk.Frame):
                             dup_count += 1
 
                     shutil.copy(
-                        self.folder_dir + '/' + folder_name + '/materials/' + file_name[:-17] + '.xml.fdm_material',
+                        self.folder_dir.get() + '/' + folder_name + '/materials/' + file_name[:-17] + '.xml.fdm_material',
                         self.cura_dir + '/materials/' + file_name[:-17] + str(dup_count) + '.xml.fdm_material')
 
         self.master.destroy()
@@ -263,7 +263,7 @@ class Window(tk.Frame):
     def window1(self):
         # asks for which folder to put exported files into
         def check_dir():
-            s = self.folder_dir.get().replace('\\', '/')
+            s = self.folder_dir.get().replace('\\', '/').strip('/')
             if os.path.exists(s):
                 self.next_window()
             elif s == '':
