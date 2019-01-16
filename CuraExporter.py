@@ -339,7 +339,7 @@ class Window(tk.Frame):
                     text='Please input the name of the exported folder.'
                          '\nLeaving this blank will call it EXPORTED CuraFiles #' + str(self.n))
 
-            s = self.folder_dir.get().replace('\\', '/')
+            s = self.folder_dir.get().replace('\\', '/').strip('/')
             if os.path.exists(s):
                 self.next_window()
                 getN()
